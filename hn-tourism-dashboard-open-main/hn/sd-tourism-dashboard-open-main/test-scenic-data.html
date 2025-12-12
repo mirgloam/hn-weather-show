@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景区数据测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .city-section {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .city-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .scenic-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+        }
+        .scenic-item {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .no-data {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>景区数据测试</h1>
+    <p>点击下方城市名称查看景区数据：</p>
+    
+    <div id="app">
+        <div class="city-section">
+            <div class="city-name" onclick="loadCityData('邵阳市')">邵阳市</div>
+            <div id="shaoyang-data" class="scenic-list">
+                <div class="no-data">点击城市名称加载数据</div>
+            </div>
+        </div>
+        
+        <div class="city-section">
+            <div class="city-name" onclick="loadCityData('衡阳市')">衡阳市</div>
+            <div id="hengyang-data" class="scenic-list">
+                <div class="no-data">点击城市名称加载数据</div>
+            </div>
+        </div>
+        
+        <div class="city-section">
+            <div class="city-name" onclick="loadCityData('张家界市')">张家界市</div>
+            <div id="zhangjiajie-data" class="scenic-list">
+                <div class="no-data">点击城市名称加载数据</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 加载JSON数据
+        fetch('./src/assets/data/A级景区.json')
+            .then(response => response.json())
+            .then(data => {
+                window.scenicData = data;
+                console.log('JSON数据加载成功:', data);
+                console.log('可用城市:', Object.keys(data));
+            })
+            .catch(error => {
+                console.error('JSON数据加载失败:', error);
+            });
+
+        // 加载城市数据
+        function loadCityData(cityName) {
+            const scenicData = window.scenicData;
+            if (!scenicData) {
+                alert('JSON数据还未加载完成，请稍等');
+                return;
+            }
+
+            console.log('加载城市:', cityName);
+            console.log('所有可用城市:', Object.keys(scenicData));
+
+            // 尝试匹配城市名称
+            let spots = [];
+            const possibleKeys = [cityName, `${cityName}市`];
+
+            for (const key of possibleKeys) {
+                console.log('检查键:', key, '是否存在:', key in scenicData);
+                if (scenicData[key]) {
+                    spots = scenicData[key];
+                    console.log('找到数据:', spots.length, '个景区');
+                    break;
+                }
+            }
+
+            // 显示数据
+            const containerId = `${cityName.replace(/市/g, '').toLowerCase()}-data`;
+            const container = document.getElementById(containerId);
+
+            if (spots.length > 0) {
+                container.innerHTML = spots.map(spot => 
+                    `<div class="scenic-item">${spot.name} (${spot.level})</div>`
+                ).join('');
+            } else {
+                container.innerHTML = '<div class="no-data">未找到该城市的景区数据</div>';
+                // 显示JSON中是否有邵阳市数据
+                if (scenicData['邵阳市']) {
+                    console.log('JSON中邵阳市实际数据:', scenicData['邵阳市']);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
